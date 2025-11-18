@@ -130,26 +130,37 @@ class InterviewScriptGenerator {
         const prompt = this.buildPrompt();
         
         try {
-            const response = await fetch('https://tu-servidor-gemini.herokuapp.com/generate', {
+            // Llamar directamente a la API de Gemini
+            const response = await fetch(`${GEMINI_CONFIG.apiUrl}?key=${GEMINI_CONFIG.apiKey}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    prompt: prompt
+                    contents: [{
+                        parts: [{
+                            text: prompt
+                        }]
+                    }],
+                    generationConfig: {
+                        temperature: 0.7,
+                        maxOutputTokens: 8000,
+                    }
                 })
             });
             
             if (!response.ok) {
-                throw new Error(`Error ${response.status}`);
+                const errorData = await response.json();
+                console.error('Error de Gemini:', errorData);
+                throw new Error(`Error ${response.status}: ${errorData.error?.message || 'Error desconocido'}`);
             }
             
             const data = await response.json();
             
-            if (data.success && data.text) {
-                this.generatedScript = this.formatGeminiResponse(data.text);
+            if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
+                this.generatedScript = this.formatGeminiResponse(data.candidates[0].content.parts[0].text);
             } else {
-                throw new Error('Respuesta inválida del servidor');
+                throw new Error('Respuesta inválida de Gemini');
             }
         } catch (error) {
             console.error('Error:', error);
