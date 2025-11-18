@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Scripts de Entrevistas Conductuales</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo-section">
+                <div class="logo">
+                    <img src="./images/logo.png" alt="Logo" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="logo" style="display: none;">🚀</div>
+                </div>
+                <div class="company-info">
+                    <div class="company-name">Transformación Digital AA+</div>
+                    <div class="contact-info">Ing. Alejandro Aguilar MBA. alejandroaguilar1000@gmail.com</div>
+                    <div class="contact-info">(+506) 8784-323</div>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <h1>Generador de Scripts de Entrevistas Conductuales</h1>
+            <p class="subtitle">Crea entrevistas estructuradas usando el método STAR para encontrar al candidato ideal</p>
+
+            <form id="interviewForm" class="interview-form">
+                <div class="form-group">
+                    <label for="companyName">Nombre de la empresa *</label>
+                    <input type="text" id="companyName" name="companyName" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="missionVision">Misión/Visión (Opcional)</label>
+                    <textarea id="missionVision" name="missionVision" rows="3" placeholder="Describe la misión y visión de la empresa..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="companyDescription">Descripción de la empresa / Objetivos empresariales *</label>
+                    <textarea id="companyDescription" name="companyDescription" rows="4" required placeholder="Describe los objetivos y características principales de la empresa..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="jobPosition">Puesto a contratar *</label>
+                    <input type="text" id="jobPosition" name="jobPosition" required placeholder="ej: Desarrollador Full Stack Senior">
+                </div>
+
+                <div class="form-group">
+                    <label for="jobFunctions">Principales funciones del puesto *</label>
+                    <textarea id="jobFunctions" name="jobFunctions" rows="4" required placeholder="Describe las principales responsabilidades y funciones del puesto..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="technicalSkills">Habilidades técnicas del puesto *</label>
+                    <textarea id="technicalSkills" name="technicalSkills" rows="4" required placeholder="Lista las habilidades técnicas requeridas..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="softSkills">Habilidades blandas / Aptitudes *</label>
+                    <textarea id="softSkills" name="softSkills" rows="4" required placeholder="Describe las habilidades blandas y aptitudes deseadas..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Correo para enviar resultado *</label>
+                    <input type="email" id="email" name="email" required placeholder="correo@ejemplo.com">
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" id="clearBtn" class="btn btn-secondary">Borrar y empezar</button>
+                    <button type="button" id="generateBtn" class="btn btn-primary">Generar Script de Entrevista</button>
+                </div>
+            </form>
+
+            <div id="loadingSection" class="loading-section hidden">
+                <div class="loading-spinner"></div>
+                <p>Generando script de entrevista conductual...</p>
+            </div>
+
+            <div id="resultSection" class="result-section hidden">
+                <h2>Script de Entrevista Conductual Generado</h2>
+                <div id="scriptContent" class="script-content"></div>
+                <div class="result-actions">
+                    <button id="downloadBtn" class="btn btn-primary">📄 Descargar PDF</button>
+                    <button id="newScriptBtn" class="btn btn-outline">🔄 Generar nuevo script</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <script src="script.js"></script>
+</body>
+</html>
