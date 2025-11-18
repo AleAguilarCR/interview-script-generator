@@ -637,58 +637,10 @@ class InterviewScriptGenerator {
     }
     
     preloadLogo() {
-        // Convertir el logo a base64 al cargar la página para evitar tainted canvas
-        const logoImg = document.getElementById('logoImage');
-        
-        if (!logoImg) {
-            console.log('Elemento de logo no encontrado');
-            return;
-        }
-        
-        const convertLogo = () => {
-            try {
-                // Crear un nuevo objeto Image para cargar sin contaminar
-                const img = new Image();
-                img.onload = () => {
-                    try {
-                        const canvas = document.createElement('canvas');
-                        canvas.width = img.width;
-                        canvas.height = img.height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0);
-                        this.logoDataURL = canvas.toDataURL('image/png');
-                        console.log('✅ Logo precargado exitosamente');
-                        
-                        // Reemplazar el src del logo visible con el base64
-                        logoImg.src = this.logoDataURL;
-                    } catch (e) {
-                        console.error('❌ Error al convertir logo:', e);
-                        this.logoDataURL = null;
-                    }
-                };
-                
-                img.onerror = () => {
-                    console.log('⚠️ No se pudo cargar el logo, usando fallback');
-                    this.logoDataURL = null;
-                };
-                
-                // Cargar la imagen
-                img.src = logoImg.src;
-            } catch (e) {
-                console.error('Error al precargar logo:', e);
-                this.logoDataURL = null;
-            }
-        };
-        
-        if (logoImg.complete && logoImg.naturalWidth > 0) {
-            convertLogo();
-        } else {
-            logoImg.addEventListener('load', convertLogo);
-            logoImg.addEventListener('error', () => {
-                console.log('Error al cargar imagen inicial');
-                this.logoDataURL = null;
-            });
-        }
+        // No intentar cargar el logo, simplemente usar null
+        // Esto hará que siempre use el fallback (texto AA+)
+        this.logoDataURL = null;
+        console.log('✅ Usando logo fallback (AA+)');
     }
     
     async loadLogoAsDataURL() {
