@@ -637,37 +637,55 @@ class InterviewScriptGenerator {
     
     async loadLogoAsDataURL() {
         return new Promise((resolve) => {
-            const img = new Image();
-            img.crossOrigin = 'Anonymous';
+            // Intentar obtener el logo desde el DOM primero usando el ID
+            const logoImg = document.getElementById('logoImage');
             
-            img.onload = function() {
+            if (logoImg && logoImg.complete && logoImg.naturalWidth > 0) {
+                // El logo ya está cargado en el DOM
                 try {
                     const canvas = document.createElement('canvas');
-                    canvas.width = img.width;
-                    canvas.height = img.height;
+                    canvas.width = logoImg.naturalWidth;
+                    canvas.height = logoImg.naturalHeight;
                     const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0);
-                    resolve(canvas.toDataURL('image/png'));
+                    ctx.drawImage(logoImg, 0, 0);
+                    const dataURL = canvas.toDataURL('image/png');
+                    console.log('Logo cargado desde el DOM exitosamente');
+                    resolve(dataURL);
+                    return;
                 } catch (e) {
-                    console.log('Error al convertir logo:', e);
-                    resolve(null);
+                    console.log('Error al convertir logo del DOM:', e);
                 }
-            };
+            }
             
-            img.onerror = function() {
-                console.log('Error al cargar logo');
-                resolve(null);
-            };
-            
-            // Intentar cargar el logo
-            img.src = './images/logo.png';
-            
-            // Timeout de 2 segundos
-            setTimeout(() => {
-                if (!img.complete) {
+            // Si el logo aún no está cargado, esperar a que se cargue
+            if (logoImg && !logoImg.complete) {
+                logoImg.onload = function() {
+                    try {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = logoImg.naturalWidth;
+                        canvas.height = logoImg.naturalHeight;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(logoImg, 0, 0);
+                        const dataURL = canvas.toDataURL('image/png');
+                        console.log('Logo cargado después de esperar');
+                        resolve(dataURL);
+                    } catch (e) {
+                        console.log('Error al convertir logo después de esperar:', e);
+                        resolve(null);
+                    }
+                };
+                
+                logoImg.onerror = function() {
+                    console.log('Error al cargar logo del DOM');
                     resolve(null);
-                }
-            }, 2000);
+                };
+                
+                return;
+            }
+            
+            // Si no está en el DOM o falló, usar fallback
+            console.log('Logo no disponible en el DOM, usando fallback');
+            resolve(null);
         });
     }
     
