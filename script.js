@@ -820,7 +820,8 @@ class InterviewScriptGenerator {
         const elements = this.parseHTMLForPDF(tempDiv);
         
         elements.forEach(element => {
-            if (y > 220) {
+            // Verificar si necesitamos nueva página con más espacio
+            if (y > 255) {
                 pdf.addPage();
                 // Crear header simple sin await
                 pdf.setFillColor(44, 62, 80);
@@ -834,6 +835,17 @@ class InterviewScriptGenerator {
             
             switch (element.type) {
                 case 'h3':
+                    // Asegurar espacio para el título
+                    if (y > 245) {
+                        pdf.addPage();
+                        pdf.setFillColor(44, 62, 80);
+                        pdf.rect(0, 0, 210, 25, 'F');
+                        pdf.setTextColor(255, 255, 255);
+                        pdf.setFontSize(12);
+                        pdf.text('Script de Entrevista', 105, 15, { align: 'center' });
+                        pdf.setTextColor(0, 0, 0);
+                        y = 40;
+                    }
                     y += 10;
                     pdf.setFontSize(12);
                     pdf.setFont(undefined, 'bold');
@@ -844,6 +856,17 @@ class InterviewScriptGenerator {
                     break;
                     
                 case 'h4':
+                    // Asegurar espacio para subtítulo
+                    if (y > 248) {
+                        pdf.addPage();
+                        pdf.setFillColor(44, 62, 80);
+                        pdf.rect(0, 0, 210, 25, 'F');
+                        pdf.setTextColor(255, 255, 255);
+                        pdf.setFontSize(12);
+                        pdf.text('Script de Entrevista', 105, 15, { align: 'center' });
+                        pdf.setTextColor(0, 0, 0);
+                        y = 40;
+                    }
                     y += 8;
                     pdf.setFontSize(11);
                     pdf.setFont(undefined, 'bold');
@@ -859,6 +882,17 @@ class InterviewScriptGenerator {
                     
                     // Procesar diferentes tipos de contenido
                     if (element.text.includes('Pregunta:')) {
+                        // Verificar espacio para pregunta completa
+                        if (y > 240) {
+                            pdf.addPage();
+                            pdf.setFillColor(44, 62, 80);
+                            pdf.rect(0, 0, 210, 25, 'F');
+                            pdf.setTextColor(255, 255, 255);
+                            pdf.setFontSize(12);
+                            pdf.text('Script de Entrevista', 105, 15, { align: 'center' });
+                            pdf.setTextColor(0, 0, 0);
+                            y = 40;
+                        }
                         const parts = element.text.split('Pregunta:');
                         if (parts.length > 1) {
                             // Título "Pregunta" en negrita
@@ -877,6 +911,17 @@ class InterviewScriptGenerator {
                             y += questionLines.length * 4.5 + 6;
                         }
                     } else if (element.text.includes('Qué buscar:')) {
+                        // Verificar espacio antes de iniciar bloque
+                        if (y > 240) {
+                            pdf.addPage();
+                            pdf.setFillColor(44, 62, 80);
+                            pdf.rect(0, 0, 210, 25, 'F');
+                            pdf.setTextColor(255, 255, 255);
+                            pdf.setFontSize(12);
+                            pdf.text('Script de Entrevista', 105, 15, { align: 'center' });
+                            pdf.setTextColor(0, 0, 0);
+                            y = 40;
+                        }
                         const parts = element.text.split('Qué buscar:');
                         if (parts.length > 1) {
                             // Título "Qué buscar" en negrita
@@ -915,6 +960,17 @@ class InterviewScriptGenerator {
                             y += 4;
                         }
                     } else if (element.text.includes('Preguntas de seguimiento:')) {
+                        // Verificar espacio antes de iniciar bloque
+                        if (y > 245) {
+                            pdf.addPage();
+                            pdf.setFillColor(44, 62, 80);
+                            pdf.rect(0, 0, 210, 25, 'F');
+                            pdf.setTextColor(255, 255, 255);
+                            pdf.setFontSize(12);
+                            pdf.text('Script de Entrevista', 105, 15, { align: 'center' });
+                            pdf.setTextColor(0, 0, 0);
+                            y = 40;
+                        }
                         const parts = element.text.split('Preguntas de seguimiento:');
                         if (parts.length > 1) {
                             // Título "Preguntas de seguimiento" en negrita
@@ -1010,6 +1066,18 @@ class InterviewScriptGenerator {
                     
                 case 'ul':
                     element.items.forEach(item => {
+                        // Verificar espacio antes de cada bullet
+                        if (y > 255) {
+                            pdf.addPage();
+                            pdf.setFillColor(44, 62, 80);
+                            pdf.rect(0, 0, 210, 25, 'F');
+                            pdf.setTextColor(255, 255, 255);
+                            pdf.setFontSize(12);
+                            pdf.text('Script de Entrevista', 105, 15, { align: 'center' });
+                            pdf.setTextColor(0, 0, 0);
+                            y = 40;
+                        }
+                        
                         pdf.setFontSize(10);
                         pdf.setFont(undefined, 'normal');
                         pdf.setTextColor(0, 0, 0);

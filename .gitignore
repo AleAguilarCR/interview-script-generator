@@ -20,6 +20,9 @@ ENV/
 .DS_Store
 Thumbs.db
 
+# API Keys - NO SUBIR
+config.js
+
 # Logs
 *.log
 
