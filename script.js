@@ -2,6 +2,7 @@ class InterviewScriptGenerator {
     constructor() {
         this.formData = {};
         this.generatedScript = '';
+        this.logoDataURL = null;
         this.init();
     }
 
@@ -9,6 +10,7 @@ class InterviewScriptGenerator {
         this.setupEventListeners();
         this.loadPreviousData();
         this.focusFirstField();
+        this.preloadLogo();
     }
     
     loadPreviousData() {
@@ -372,8 +374,7 @@ class InterviewScriptGenerator {
             const pdf = new jsPDF('p', 'mm', 'a4');
             let currentPage = 1;
             
-            // Cargar logo antes de generar el PDF
-            this.logoDataURL = await this.loadLogoAsDataURL();
+            // El logo ya está precargado en this.logoDataURL
             
             // 1. Portada elegante
             await this.addPDFCover(pdf);
@@ -429,8 +430,8 @@ class InterviewScriptGenerator {
                     
                     // Si no es la última sección, buscar un buen punto de corte
                     if (currentY + sliceHeight < imgHeight) {
-                        // Buscar espacio en blanco en los últimos 30 píxeles
-                        const searchRange = 30;
+                        // Buscar espacio en blanco en los últimos 40 píxeles
+                        const searchRange = 40;
                         let bestCutPoint = sliceHeight;
                         let maxWhiteSpace = 0;
                         
@@ -635,58 +636,69 @@ class InterviewScriptGenerator {
         pdf.text('AA+', x, y + (radius * 0.15), { align: 'center' });
     }
     
-    async loadLogoAsDataURL() {
-        return new Promise((resolve) => {
-            // Intentar obtener el logo desde el DOM primero usando el ID
-            const logoImg = document.getElementById('logoImage');
-            
-            if (logoImg && logoImg.complete && logoImg.naturalWidth > 0) {
-                // El logo ya está cargado en el DOM
-                try {
-                    const canvas = document.createElement('canvas');
-                    canvas.width = logoImg.naturalWidth;
-                    canvas.height = logoImg.naturalHeight;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(logoImg, 0, 0);
-                    const dataURL = canvas.toDataURL('image/png');
-                    console.log('Logo cargado desde el DOM exitosamente');
-                    resolve(dataURL);
-                    return;
-                } catch (e) {
-                    console.log('Error al convertir logo del DOM:', e);
-                }
-            }
-            
-            // Si el logo aún no está cargado, esperar a que se cargue
-            if (logoImg && !logoImg.complete) {
-                logoImg.onload = function() {
+    preloadLogo() {
+        // Convertir el logo a base64 al cargar la página para evitar tainted canvas
+        const logoImg = document.getElementById('logoImage');
+        
+        if (!logoImg) {
+            console.log('Elemento de logo no encontrado');
+            return;
+        }
+        
+        const convertLogo = () => {
+            try {
+                // Crear un nuevo objeto Image para cargar sin contaminar
+                const img = new Image();
+                img.onload = () => {
                     try {
                         const canvas = document.createElement('canvas');
-                        canvas.width = logoImg.naturalWidth;
-                        canvas.height = logoImg.naturalHeight;
+                        canvas.width = img.width;
+                        canvas.height = img.height;
                         const ctx = canvas.getContext('2d');
-                        ctx.drawImage(logoImg, 0, 0);
-                        const dataURL = canvas.toDataURL('image/png');
-                        console.log('Logo cargado después de esperar');
-                        resolve(dataURL);
+                        ctx.drawImage(img, 0, 0);
+                        this.logoDataURL = canvas.toDataURL('image/png');
+                        console.log('✅ Logo precargado exitosamente');
+                        
+                        // Reemplazar el src del logo visible con el base64
+                        logoImg.src = this.logoDataURL;
                     } catch (e) {
-                        console.log('Error al convertir logo después de esperar:', e);
-                        resolve(null);
+                        console.error('❌ Error al convertir logo:', e);
+                        this.logoDataURL = null;
                     }
                 };
                 
-                logoImg.onerror = function() {
-                    console.log('Error al cargar logo del DOM');
-                    resolve(null);
+                img.onerror = () => {
+                    console.log('⚠️ No se pudo cargar el logo, usando fallback');
+                    this.logoDataURL = null;
                 };
                 
-                return;
+                // Cargar la imagen
+                img.src = logoImg.src;
+            } catch (e) {
+                console.error('Error al precargar logo:', e);
+                this.logoDataURL = null;
             }
-            
-            // Si no está en el DOM o falló, usar fallback
-            console.log('Logo no disponible en el DOM, usando fallback');
-            resolve(null);
-        });
+        };
+        
+        if (logoImg.complete && logoImg.naturalWidth > 0) {
+            convertLogo();
+        } else {
+            logoImg.addEventListener('load', convertLogo);
+            logoImg.addEventListener('error', () => {
+                console.log('Error al cargar imagen inicial');
+                this.logoDataURL = null;
+            });
+        }
+    }
+    
+    async loadLogoAsDataURL() {
+        // Simplemente retornar el logo precargado
+        if (this.logoDataURL) {
+            console.log('✅ Usando logo precargado');
+            return this.logoDataURL;
+        }
+        console.log('⚠️ Logo no disponible, usando fallback');
+        return null;
     }
     
     extractScriptSections() {
