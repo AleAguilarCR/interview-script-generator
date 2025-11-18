@@ -3,5 +3,5 @@
 // Por seguridad, considera usar variables de entorno o un backend
 const GEMINI_CONFIG = {
     apiKey: 'AIzaSyAgBFK5IYDrsXMlY54ygaO70M0jR5tP_iA',
-    apiUrl: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent'
+    apiUrl: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent'
 };
