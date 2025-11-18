@@ -372,6 +372,9 @@ class InterviewScriptGenerator {
             const pdf = new jsPDF('p', 'mm', 'a4');
             let currentPage = 1;
             
+            // Cargar logo antes de generar el PDF
+            this.logoDataURL = await this.loadLogoAsDataURL();
+            
             // 1. Portada elegante
             await this.addPDFCover(pdf);
             
@@ -413,7 +416,7 @@ class InterviewScriptGenerator {
             await this.addPDFHeader(pdf, currentPage);
             
             let yPosition = 40;
-            const pageHeight = 250;
+            const pageHeight = 260; // Aumentado de 250 a 260
             
             if (imgHeight <= pageHeight) {
                 pdf.addImage(imgData, 'PNG', 20, yPosition, imgWidth, imgHeight);
@@ -424,33 +427,50 @@ class InterviewScriptGenerator {
                 while (currentY < imgHeight) {
                     let sliceHeight = Math.min(segmentHeight, imgHeight - currentY);
                     
-                    // Si no es la última sección, verificar que no cortemos una línea
+                    // Si no es la última sección, buscar un buen punto de corte
                     if (currentY + sliceHeight < imgHeight) {
-                        // Crear canvas temporal para verificar el corte
-                        const testCanvas = document.createElement('canvas');
-                        const testCtx = testCanvas.getContext('2d');
-                        testCanvas.width = canvas.width;
-                        testCanvas.height = 10; // Solo necesitamos unas pocas líneas
+                        // Buscar espacio en blanco en los últimos 30 píxeles
+                        const searchRange = 30;
+                        let bestCutPoint = sliceHeight;
+                        let maxWhiteSpace = 0;
                         
-                        const testY = ((currentY + sliceHeight) * canvas.width) / imgWidth;
-                        testCtx.drawImage(canvas, 0, testY - 5, canvas.width, 10, 0, 0, canvas.width, 10);
-                        
-                        const imageData = testCtx.getImageData(0, 5, canvas.width, 1);
-                        const pixels = imageData.data;
-                        
-                        // Verificar si hay contenido (no es línea en blanco)
-                        let hasContent = false;
-                        for (let i = 0; i < pixels.length; i += 4) {
-                            if (pixels[i] < 250 || pixels[i + 1] < 250 || pixels[i + 2] < 250) {
-                                hasContent = true;
+                        for (let offset = 0; offset < searchRange; offset++) {
+                            const testY = Math.floor(((currentY + sliceHeight - offset) * canvas.width) / imgWidth);
+                            
+                            if (testY <= 0 || testY >= canvas.height) continue;
+                            
+                            // Crear canvas temporal para analizar la línea
+                            const testCanvas = document.createElement('canvas');
+                            const testCtx = testCanvas.getContext('2d');
+                            testCanvas.width = canvas.width;
+                            testCanvas.height = 1;
+                            
+                            testCtx.drawImage(canvas, 0, testY, canvas.width, 1, 0, 0, canvas.width, 1);
+                            const imageData = testCtx.getImageData(0, 0, canvas.width, 1);
+                            const pixels = imageData.data;
+                            
+                            // Contar píxeles blancos o casi blancos
+                            let whitePixels = 0;
+                            for (let i = 0; i < pixels.length; i += 4) {
+                                if (pixels[i] > 240 && pixels[i + 1] > 240 && pixels[i + 2] > 240) {
+                                    whitePixels++;
+                                }
+                            }
+                            
+                            // Si encontramos una línea mayormente blanca, es un buen punto de corte
+                            if (whitePixels > maxWhiteSpace) {
+                                maxWhiteSpace = whitePixels;
+                                bestCutPoint = sliceHeight - offset;
+                            }
+                            
+                            // Si encontramos una línea casi completamente blanca, usar ese punto
+                            if (whitePixels > canvas.width * 0.9) {
+                                bestCutPoint = sliceHeight - offset;
                                 break;
                             }
                         }
                         
-                        // Si hay contenido, reducir la altura para no cortar la línea
-                        if (hasContent) {
-                            sliceHeight -= 15; // Reducir para evitar cortar
-                        }
+                        sliceHeight = bestCutPoint;
                     }
                     
                     const sliceCanvas = document.createElement('canvas');
@@ -498,13 +518,19 @@ class InterviewScriptGenerator {
         pdf.setFillColor(44, 62, 80);
         pdf.rect(0, 0, 210, 25, 'F');
         
-        // Logo fallback siempre
-        pdf.setFillColor(255, 255, 255);
-        pdf.circle(17.5, 15.5, 7, 'F');
-        pdf.setTextColor(44, 62, 80);
-        pdf.setFontSize(8);
-        pdf.setFont(undefined, 'bold');
-        pdf.text('AA+', 17.5, 16.5, { align: 'center' });
+        // Intentar agregar el logo real
+        if (this.logoDataURL) {
+            try {
+                pdf.addImage(this.logoDataURL, 'PNG', 11, 9, 13, 13);
+            } catch (e) {
+                // Fallback si falla
+                console.log('Error al agregar logo:', e);
+                this.addLogoFallback(pdf, 17.5, 15.5);
+            }
+        } else {
+            // Logo fallback
+            this.addLogoFallback(pdf, 17.5, 15.5);
+        }
         
         // Información de contacto
         pdf.setTextColor(255, 255, 255);
@@ -600,6 +626,51 @@ class InterviewScriptGenerator {
         });
     }
     
+    addLogoFallback(pdf, x, y, radius = 7, fontSize = 8) {
+        pdf.setFillColor(255, 255, 255);
+        pdf.circle(x, y, radius, 'F');
+        pdf.setTextColor(44, 62, 80);
+        pdf.setFontSize(fontSize);
+        pdf.setFont(undefined, 'bold');
+        pdf.text('AA+', x, y + (radius * 0.15), { align: 'center' });
+    }
+    
+    async loadLogoAsDataURL() {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.crossOrigin = 'Anonymous';
+            
+            img.onload = function() {
+                try {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    resolve(canvas.toDataURL('image/png'));
+                } catch (e) {
+                    console.log('Error al convertir logo:', e);
+                    resolve(null);
+                }
+            };
+            
+            img.onerror = function() {
+                console.log('Error al cargar logo');
+                resolve(null);
+            };
+            
+            // Intentar cargar el logo
+            img.src = './images/logo.png';
+            
+            // Timeout de 2 segundos
+            setTimeout(() => {
+                if (!img.complete) {
+                    resolve(null);
+                }
+            }, 2000);
+        });
+    }
+    
     extractScriptSections() {
         if (!this.generatedScript) {
             console.log('No hay script generado');
@@ -641,13 +712,18 @@ class InterviewScriptGenerator {
         pdf.setFillColor(255, 255, 255);
         pdf.rect(0, 200, 210, 97, 'F');
         
-        // Logo fallback en portada
-        pdf.setFillColor(255, 255, 255);
-        pdf.circle(105, 60, 20, 'F');
-        pdf.setTextColor(44, 62, 80);
-        pdf.setFontSize(16);
-        pdf.setFont(undefined, 'bold');
-        pdf.text('AA+', 105, 65, { align: 'center' });
+        // Intentar agregar el logo real en la portada
+        if (this.logoDataURL) {
+            try {
+                pdf.addImage(this.logoDataURL, 'PNG', 85, 40, 40, 40);
+            } catch (e) {
+                console.log('Error al agregar logo en portada:', e);
+                this.addLogoFallback(pdf, 105, 65, 20, 16);
+            }
+        } else {
+            // Logo fallback en portada
+            this.addLogoFallback(pdf, 105, 65, 20, 16);
+        }
         
         // Título principal
         pdf.setFontSize(28);
